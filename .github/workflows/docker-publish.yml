@@ -27,13 +27,15 @@ jobs:
       - name: Set image name (lowercase)
         id: set-image-name
         run: |
-          IMAGE_NAME="ghcr.io/${GITHUB_REPOSITORY,,}/app:latest"
-          echo "image_name=$IMAGE_NAME" >> $GITHUB_OUTPUT
+          REPO_NAME=${GITHUB_REPOSITORY,,}
+          echo "base_repo=ghcr.io/$REPO_NAME" >> $GITHUB_OUTPUT
+          echo "app_image=ghcr.io/$REPO_NAME/app:latest" >> $GITHUB_OUTPUT
 
-      - name: Build Docker image
+      - name: Build Docker Compose services
         run: |
-          docker build -t ${{ steps.set-image-name.outputs.image_name }} .
+          docker compose build
 
-      - name: Push Docker image
+      - name: Tag and Push app service
         run: |
-          docker push ${{ steps.set-image-name.outputs.image_name }}
+          docker tag my-basic-container-app:latest ${{ steps.set-image-name.outputs.app_image }}
+          docker push ${{ steps.set-image-name.outputs.app_image }}
