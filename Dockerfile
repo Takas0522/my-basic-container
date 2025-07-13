@@ -1,5 +1,5 @@
-# [Choice] .NET version: 8.0-bookworm, 8.0-jammy, 8.0-bullseye
-FROM mcr.microsoft.com/devcontainers/dotnet:1-8.0-bookworm
+# [Choice] .NET version: 9.0-bookworm, 9.0-jammy, 9.0-bullseye
+FROM mcr.microsoft.com/devcontainers/dotnet:1-9.0-bookworm
 
 # Add .NET global tools path
 ENV PATH $PATH:/home/vscode/.dotnet:/home/vscode/.dotnet/tools
