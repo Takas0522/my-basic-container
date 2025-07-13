@@ -18,6 +18,8 @@ RUN npm install -g @angular/cli
 # Install Azure Functions Core Tools (ARM64 compatible for Apple Silicon/ARM PCs)
 RUN npm install -g azure-functions-core-tools@4.0.7332-preview1
 
+RUN npm install -g @azure/static-web-apps-cli
+
 # Install SQL Tools: SQLPackage and sqlcmd
 COPY sql/installSQLtools.sh installSQLtools.sh
 RUN bash ./installSQLtools.sh \
