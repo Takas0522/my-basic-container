@@ -1,13 +1,54 @@
-name: Build and Push Docker image
+name: Build, Test and Push DevContainer
 
 on:
   push:
     branches: [ main ]
+  pull_request:
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
-  build-and-push:
+  test-devcontainer:
     runs-on: ubuntu-latest
+    
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build Docker Compose services
+        run: |
+          docker compose build
+
+      - name: Start services for testing
+        run: |
+          docker compose up -d
+          
+      - name: Wait for services to be ready
+        run: |
+          echo "Waiting for services to start..."
+          sleep 30
+          
+      - name: Test DevContainer functionality
+        run: |
+          # Copy test script to running container and execute it
+          docker compose exec -T app bash -c "
+            # Make test script executable and run it
+            chmod +x /workspace/.devcontainer/run-tests.sh
+            /workspace/.devcontainer/run-tests.sh
+          "
+
+      - name: Stop services
+        if: always()
+        run: |
+          docker compose down -v
+
+  build-and-push:
+    needs: test-devcontainer
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
 
     permissions:
       contents: read

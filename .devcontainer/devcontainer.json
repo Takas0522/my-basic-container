@@ -1,0 +1,76 @@
+{
+  "name": "My Basic Container - Full Stack Development Environment",
+  "dockerComposeFile": "../docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspace",
+  
+  // Features to install in the container
+  "features": {
+    "ghcr.io/devcontainers/features/git:1": {}
+  },
+
+  // Configure tool-specific properties
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-dotnettools.csharp",
+        "ms-dotnettools.csdevkit",
+        "angular.ng-template",
+        "ms-vscode.azure-account",
+        "ms-azuretools.vscode-azurefunctions",
+        "ms-mssql.mssql",
+        "ms-azuretools.vscode-azurestorage",
+        "bradlc.vscode-tailwindcss"
+      ],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash"
+      }
+    }
+  },
+
+  // Forward ports for development
+  "forwardPorts": [
+    5000,   // ASP.NET Core default
+    4200,   // Angular dev server
+    7071,   // Azure Functions
+    1433,   // SQL Server
+    10000,  // Azurite Blob
+    10001,  // Azurite Queue
+    10002   // Azurite Table
+  ],
+  "portsAttributes": {
+    "5000": {
+      "label": "ASP.NET Core App"
+    },
+    "4200": {
+      "label": "Angular Dev Server"
+    },
+    "7071": {
+      "label": "Azure Functions"
+    },
+    "1433": {
+      "label": "SQL Server"
+    },
+    "10000": {
+      "label": "Azurite Blob Service"
+    }
+  },
+
+  // Lifecycle scripts
+  "postCreateCommand": "chmod +x .devcontainer/setup.sh && ./.devcontainer/setup.sh",
+  "postStartCommand": "./.devcontainer/post-start.sh",
+
+  // Set environment variables
+  "containerEnv": {
+    "ASPNETCORE_ENVIRONMENT": "Development",
+    "AZURITE_CONNECTIONSTRING": "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;QueueEndpoint=http://azurite:10001/devstoreaccount1;TableEndpoint=http://azurite:10002/devstoreaccount1;",
+    "SQL_CONNECTION_STRING": "Server=db,1433;Database=TestDb;User Id=sa;Password=P@ssw0rd!;TrustServerCertificate=true"
+  },
+
+  // Use 'appPort' to create a container with published ports. If the port isn't working, see:
+  // https://aka.ms/vscode-remote/containers/port-forwarding
+  "appPort": [],
+  
+  // Use the non-root user created in the Dockerfile
+  "remoteUser": "vscode"
+}

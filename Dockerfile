@@ -2,23 +2,22 @@
 FROM mcr.microsoft.com/devcontainers/dotnet:1-9.0-bookworm
 
 # Add .NET global tools path
-ENV PATH $PATH:/home/vscode/.dotnet:/home/vscode/.dotnet/tools
+ENV PATH="$PATH:/home/vscode/.dotnet:/home/vscode/.dotnet/tools"
 
 # [Optional] Uncomment this section to install additional OS packages.
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && apt-get -y install --no-install-recommends software-properties-common curl unzip libicu72
 
-# Install Node.js (using NodeSource repository for latest LTS)
-RUN curl -fsSL https://deb.nodesource.com/setup_lts.x | bash - \
-    && apt-get install -y nodejs
+# Install Node.js (using NodeSource repository for latest LTS) and core packages
+RUN curl -k -fsSL https://deb.nodesource.com/setup_lts.x | bash - \
+    && apt-get install -y nodejs npm pkg-config libsecret-1-dev \
+    && npm config set strict-ssl false \
+    && npm install -g @angular/cli@18 --force \
+    && npm config set strict-ssl true
 
-# Install Angular CLI globally
-RUN npm install -g @angular/cli
-
-# Install Azure Functions Core Tools (ARM64 compatible for Apple Silicon/ARM PCs)
-RUN npm install -g azure-functions-core-tools@4.0.7332-preview1
-
-RUN npm install -g @azure/static-web-apps-cli
+# Note: Additional tools can be installed post-creation:
+# - Azure Functions Core Tools: npm install -g azure-functions-core-tools@4
+# - Azure SWA CLI: npm install -g @azure/static-web-apps-cli
 
 # Install SQL Tools: SQLPackage and sqlcmd
 COPY sql/installSQLtools.sh installSQLtools.sh
