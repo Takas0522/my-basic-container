@@ -70,9 +70,9 @@ echo "================================="
 run_test "SQL Server connectivity" "sqlcmd -S db -U sa -P P@ssw0rd! -Q 'SELECT 1' >/dev/null 2>&1"
 
 # Test Azurite connectivity
-run_test "Azurite Blob service connectivity" "timeout 10 curl -s -f http://azurite:10000"
-run_test "Azurite Queue service connectivity" "timeout 10 curl -s -f http://azurite:10001"
-run_test "Azurite Table service connectivity" "timeout 10 curl -s -f http://azurite:10002"
+run_test "Azurite Blob service connectivity" "curl -s http://azurite:10000 | grep -q 'Value for one of the query parameters' || curl -s -w '%{http_code}' http://azurite:10000 -o /dev/null | grep -q '^400$'"
+run_test "Azurite Queue service connectivity" "curl -s http://azurite:10001 | grep -q 'Value for one of the query parameters' || curl -s -w '%{http_code}' http://azurite:10001 -o /dev/null | grep -q '^400$'"
+run_test "Azurite Table service connectivity" "curl -s http://azurite:10002 | grep -q 'Value for one of the query parameters' || curl -s -w '%{http_code}' http://azurite:10002 -o /dev/null | grep -q '^400$'"
 
 echo -e "\n🧪 3. TESTING PROJECT CREATION AND BUILD"
 echo "======================================="
