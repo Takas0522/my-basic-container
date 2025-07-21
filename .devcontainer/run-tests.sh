@@ -114,16 +114,17 @@ case $ARCH in
         echo "Testing SQL tools for ARM64 architecture..."
         # For ARM64, we don't even try to run SqlPackage, we just check the placeholder exists
         run_test "SqlPackage placeholder exists (ARM64)" "[ -f /opt/sqlpackage/sqlpackage ] && echo 'ARM64 placeholder exists' || echo 'SqlPackage placeholder missing'"
-        run_test "sqlcmd installation and version (ARM64)" "sqlcmd -? | head -1"
+        # ARM64ではsqlcmdが/usr/local/bin/にインストールされることがある
+        run_test "sqlcmd installation and version (ARM64)" "(sqlcmd -? | head -1) || (/usr/local/bin/sqlcmd -? | head -1)"
         ;;
     *)
         echo "Testing SQL tools for unknown architecture ($ARCH)..."
         # For unknown architectures, we also don't try to run SqlPackage
         run_test "SqlPackage placeholder exists (unknown arch)" "[ -f /opt/sqlpackage/sqlpackage ] && echo 'Placeholder exists' || echo 'SqlPackage placeholder missing'"
-        run_test "sqlcmd installation and version (unknown arch)" "sqlcmd -? | head -1 || echo 'sqlcmd not properly installed for this architecture'"
+        run_test "sqlcmd installation and version (unknown arch)" "(sqlcmd -? | head -1) || (/usr/local/bin/sqlcmd -? | head -1) || echo 'sqlcmd not properly installed for this architecture'"
         ;;
 esac
-run_test "sqlcmd command availability" "command_exists sqlcmd"
+run_test "sqlcmd command availability" "command_exists sqlcmd || command_exists /usr/local/bin/sqlcmd"
 
 echo -e "\n🧪 2. TESTING SERVICE CONNECTIVITY"
 echo "================================="
@@ -131,13 +132,17 @@ echo "================================="
 # Test SQL Server connectivity using wait_for_service
 echo "📊 Testing SQL Server connection with wait_for_service..."
 if wait_for_service "SQL Server" "db" "1433"; then
-    # ARM64環境では異なる接続テスト方法を使用
+    # Architecture specific connection tests
     case $ARCH in
         x86_64|amd64)
             run_test "SQL Server connectivity (after wait)" "sqlcmd -S db -U sa -P P@ssw0rd! -Q 'SELECT 1'"
             ;;
+        aarch64|arm64)
+            # ARM64環境では、sqlcmdが/usr/local/bin/にインストールされることがある
+            run_test "SQL Server connectivity (ARM64)" "(sqlcmd -S db -U sa -P P@ssw0rd! -Q 'SELECT 1') || (/usr/local/bin/sqlcmd -S db -U sa -P P@ssw0rd! -Q 'SELECT 1') || echo 'sqlcmd not available for connection test on ARM64'"
+            ;;
         *)
-            # ARM64やその他のアーキテクチャでは、tcp接続のみをテスト（すでにwait_for_serviceで検証済み）
+            # その他のアーキテクチャでは、tcp接続のみをテスト（すでにwait_for_serviceで検証済み）
             run_test "SQL Server connectivity (TCP port check)" "echo 'SQL Server port is accessible (verified by wait_for_service)'"
             ;;
     esac

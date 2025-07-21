@@ -48,6 +48,11 @@ install_sqlcmd() {
                 if [ -f sqlcmd ]; then
                     sudo mv sqlcmd /usr/local/bin/
                     sudo chmod +x /usr/local/bin/sqlcmd
+                    # /usr/local/bin が PATH に含まれていることを確認
+                    if ! echo $PATH | grep -q "/usr/local/bin"; then
+                        echo 'export PATH="/usr/local/bin:$PATH"' | sudo tee -a /etc/profile
+                        echo "Added /usr/local/bin to PATH in /etc/profile"
+                    fi
                     echo "✅ sqlcmd successfully installed to /usr/local/bin/ for ARM64"
                     # Verify installation
                     /usr/local/bin/sqlcmd -? | head -1 || echo "Warning: sqlcmd verification failed"
@@ -155,7 +160,14 @@ echo "Sqlpackage installation completed."
 # Verify installations
 echo "Verifying installations..."
 echo "sqlcmd version:"
-sqlcmd -? | head -1 || echo "sqlcmd verification failed"
+# さまざまな場所のsqlcmdを試行
+if command -v sqlcmd >/dev/null 2>&1; then
+    sqlcmd -? | head -1 || echo "sqlcmd found but verification failed"
+elif [ -f /usr/local/bin/sqlcmd ]; then
+    /usr/local/bin/sqlcmd -? | head -1 || echo "/usr/local/bin/sqlcmd found but verification failed"
+else
+    echo "sqlcmd not found in expected locations"
+fi
 
 echo "sqlpackage version:"
 # Check architecture before attempting to run sqlpackage
