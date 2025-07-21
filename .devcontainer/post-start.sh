@@ -6,17 +6,34 @@ echo "🔄 Post-start setup..."
 # Wait a bit for all services to be fully ready
 sleep 5
 
-# Check service connectivity
+# wait_for_service関数定義
+wait_for_service() {
+    local service_name=$1
+    local host=$2
+    local port=$3
+    local max_attempts=30
+    local attempt=1
+    echo "⏳ Waiting for $service_name to be ready..."
+    while [ $attempt -le $max_attempts ]; do
+        if timeout 3 bash -c "</dev/tcp/$host/$port" 2>/dev/null; then
+            echo "✅ $service_name is ready!"
+            return 0
+        fi
+        echo "   Attempt $attempt/$max_attempts: $service_name not ready yet..."
+        sleep 2
+        attempt=$((attempt + 1))
+    done
+    echo "⚠️  Warning: $service_name did not become ready after ${max_attempts} attempts"
+    return 1
+}
+
+# サービス接続確認
 echo "🔍 Checking service connectivity..."
 
-# Check SQL Server connectivity
-echo "📊 Testing SQL Server connection..."
-timeout 30 bash -c 'until sqlcmd -S db -U sa -P P@ssw0rd! -Q "SELECT 1" > /dev/null 2>&1; do sleep 2; done'
-echo "✅ SQL Server is accessible"
+# SQL Server
+wait_for_service "SQL Server" "db" "1433"
 
-# Check Azurite connectivity
-echo "☁️ Testing Azurite connection..."
-timeout 30 bash -c 'until curl -s http://azurite:10000 > /dev/null 2>&1; do sleep 2; done'
-echo "✅ Azurite is accessible"
+# Azurite Blob
+wait_for_service "Azurite Blob" "azurite" "10000"
 
 echo "✅ Post-start setup completed!"

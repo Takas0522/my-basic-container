@@ -19,10 +19,36 @@ TESTS_FAILED=0
 run_test() {
     local test_name="$1"
     local test_command="$2"
+    local timeout_seconds="${3:-30}"  # デフォルトは30秒
     
     echo -e "\n${YELLOW}🔍 Testing: $test_name${NC}"
     
-    if eval "$test_command" > /tmp/test_output 2>&1; then
+    # タイムアウト付きでコマンドを実行
+    ( 
+        # バックグラウンドでコマンドを実行
+        eval "$test_command" > /tmp/test_output 2>&1 &
+        cmd_pid=$!
+        
+        # タイムアウト監視
+        (
+            sleep "$timeout_seconds"
+            echo "Command timed out after ${timeout_seconds} seconds" >> /tmp/test_output
+            kill -9 $cmd_pid 2>/dev/null
+        ) &
+        timeout_pid=$!
+        
+        # コマンドの完了を待つ
+        wait $cmd_pid
+        cmd_exit_code=$?
+        
+        # タイムアウト監視を終了
+        kill -9 $timeout_pid 2>/dev/null
+        wait $timeout_pid 2>/dev/null
+        
+        exit $cmd_exit_code
+    )
+    
+    if [ $? -eq 0 ]; then
         echo -e "${GREEN}✅ PASSED: $test_name${NC}"
         ((TESTS_PASSED++))
     else
@@ -67,7 +93,7 @@ echo -e "\n🧪 2. TESTING SERVICE CONNECTIVITY"
 echo "================================="
 
 # Test SQL Server connectivity
-run_test "SQL Server connectivity" "timeout 10 sqlcmd -S db -U sa -P P@ssw0rd! -Q 'SELECT 1' >/dev/null 2>&1 || echo 'SQL Server not available (may still be starting)'"
+run_test "SQL Server connectivity" "{ timeout 10 sqlcmd -S db -U sa -P P@ssw0rd! -Q 'SELECT 1' >/dev/null 2>&1; } || echo 'SQL Server not available (may still be starting)'"
 
 # Test Azurite connectivity
 run_test "Azurite Blob service connectivity" "timeout 5 curl -s http://azurite:10000 | grep -q 'Value for one of the query parameters' || timeout 5 curl -s -w '%{http_code}' http://azurite:10000 -o /dev/null | grep -q '^400$' || echo 'Azurite Blob not available'"
