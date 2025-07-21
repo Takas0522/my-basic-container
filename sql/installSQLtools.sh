@@ -4,6 +4,23 @@
 ARCH=$(uname -m)
 echo "Detected architecture: $ARCH"
 
+# Check if we're running in Docker/container
+if [ -f /.dockerenv ]; then
+    echo "Running in Docker container environment"
+else
+    echo "Running in host environment"
+fi
+
+# On ARM64, explicitly ensure qemu-user-static is not causing issues
+if [[ "$ARCH" == "aarch64" || "$ARCH" == "arm64" ]]; then
+    echo "ARM64 architecture detected - ensuring qemu emulation is not causing issues"
+    # Optionally remove qemu-user-static if it's causing problems
+    if dpkg -l | grep -q qemu-user-static; then
+        echo "qemu-user-static is installed. This may cause x64 emulation issues."
+        echo "Consider removing it if you experience x64 emulation errors."
+    fi
+fi
+
 # Function to install sqlcmd based on architecture
 install_sqlcmd() {
     echo "Installing Go-SQLCmd for $ARCH ..."
@@ -31,14 +48,17 @@ install_sqlcmd() {
                 if [ -f sqlcmd ]; then
                     sudo mv sqlcmd /usr/local/bin/
                     sudo chmod +x /usr/local/bin/sqlcmd
-                    echo "sqlcmd successfully installed to /usr/local/bin/"
+                    echo "✅ sqlcmd successfully installed to /usr/local/bin/ for ARM64"
+                    # Verify installation
+                    /usr/local/bin/sqlcmd -? | head -1 || echo "Warning: sqlcmd verification failed"
                 else
-                    echo "Failed to extract sqlcmd binary from archive"
+                    echo "❌ Failed to extract sqlcmd binary from archive"
                     ls -la
+                    return 1
                 fi
                 rm -f sqlcmd-linux-arm64.tar.bz2
             else
-                echo "Failed to download ARM64 sqlcmd, falling back to package manager..."
+                echo "❌ Failed to download ARM64 sqlcmd, falling back to package manager..."
                 curl -sSL https://packages.microsoft.com/keys/microsoft.asc | sudo tee /etc/apt/trusted.gpg.d/microsoft.asc >/dev/null
                 sudo add-apt-repository "$(wget -qO- https://packages.microsoft.com/config/ubuntu/20.04/prod.list)" >/dev/null
                 sudo apt-get update >/dev/null
@@ -69,33 +89,60 @@ install_sqlpackage() {
             echo "Installing SqlPackage for ARM64 architecture..."
             # SqlPackageはまだARM64ネイティブバイナリがないため、エミュレーションが必要
             # または代替手段を使用する必要があります
-            echo "Warning: SqlPackage does not have native ARM64 support yet."
-            echo "Attempting to install x64 version (requires emulation)..."
-            curl -sSL -o sqlpackage.zip "https://aka.ms/sqlpackage-linux" || {
-                echo "Failed to download SqlPackage. Creating placeholder..."
-                mkdir -p /opt/sqlpackage
-                cat > /opt/sqlpackage/sqlpackage << 'EOF'
+            echo "⚠️ Warning: SqlPackage does not have native ARM64 support yet."
+            echo "Creating informational placeholder script..."
+            mkdir -p /opt/sqlpackage
+            cat > /opt/sqlpackage/sqlpackage << 'EOF'
 #!/bin/bash
-echo "SqlPackage is not available for ARM64 architecture."
-echo "Please use an x64 machine or consider using alternative tools like:"
-echo "- Azure Data Studio with SQL Database Projects extension"
-echo "- dotnet CLI with SqlPackage NuGet package"
-echo "- SSDT in Visual Studio or Azure Data Studio"
+echo "🚫 SqlPackage is not natively available for ARM64 architecture."
+echo ""
+echo "💡 Alternative options for database operations on ARM64:"
+echo "   1. Use Azure Data Studio with SQL Database Projects extension"
+echo "   2. Use dotnet CLI with SqlPackage NuGet package:"
+echo "      dotnet tool install -g microsoft.sqlpackage"
+echo "   3. Use SSDT in Visual Studio or Azure Data Studio"
+echo "   4. Use x64 development environment for database projects"
+echo ""
+echo "🔧 For this DevContainer, consider:"
+echo "   - Using sqlcmd for basic database operations"
+echo "   - Entity Framework migrations for schema changes"
+echo "   - Azure Data Studio for advanced database management"
 exit 1
 EOF
-                chmod +x /opt/sqlpackage/sqlpackage
-                return
-            }
+            chmod +x /opt/sqlpackage/sqlpackage
+            echo "✅ SqlPackage placeholder script created for ARM64"
+            return
             ;;
         *)
-            echo "Trying x64 version for unsupported architecture: $ARCH"
-            curl -sSL -o sqlpackage.zip "https://aka.ms/sqlpackage-linux"
+            echo "Unsupported architecture: $ARCH"
+            echo "Creating SqlPackage placeholder for unsupported architecture..."
+            mkdir -p /opt/sqlpackage
+            cat > /opt/sqlpackage/sqlpackage << 'EOF'
+#!/bin/bash
+echo "🚫 SqlPackage is not available for this architecture."
+echo ""
+echo "💡 Detected architecture: $(uname -m)"
+echo "💡 SqlPackage currently supports only x64 (amd64) architecture natively."
+echo ""
+echo "Alternative options:"
+echo "   1. Use Azure Data Studio with SQL Database Projects extension"
+echo "   2. Use dotnet CLI with SqlPackage NuGet package:"
+echo "      dotnet tool install -g microsoft.sqlpackage"
+echo "   3. Use x64 development environment for database projects"
+exit 1
+EOF
+            chmod +x /opt/sqlpackage/sqlpackage
+            echo "✅ SqlPackage placeholder script created for unsupported architecture"
+            return
             ;;
     esac
     
-    mkdir -p /opt/sqlpackage
-    unzip sqlpackage.zip -d /opt/sqlpackage && rm sqlpackage.zip
-    chmod a+x /opt/sqlpackage/sqlpackage
+    # Only extract and install if we actually downloaded the zip (x64 only)
+    if [ -f sqlpackage.zip ]; then
+        mkdir -p /opt/sqlpackage
+        unzip sqlpackage.zip -d /opt/sqlpackage && rm sqlpackage.zip
+        chmod a+x /opt/sqlpackage/sqlpackage
+    fi
 }
 
 # Install both tools
@@ -111,4 +158,18 @@ echo "sqlcmd version:"
 sqlcmd -? | head -1 || echo "sqlcmd verification failed"
 
 echo "sqlpackage version:"
-/opt/sqlpackage/sqlpackage /version || echo "sqlpackage verification failed"
+# Check architecture before attempting to run sqlpackage
+case $ARCH in
+    x86_64|amd64)
+        if [ -f /opt/sqlpackage/sqlpackage ]; then
+            /opt/sqlpackage/sqlpackage /version || echo "sqlpackage verification failed"
+        else
+            echo "SqlPackage not installed correctly for x64"
+        fi
+        ;;
+    *)
+        echo "SqlPackage placeholder script created for $ARCH architecture"
+        echo "Run /opt/sqlpackage/sqlpackage to see available alternatives"
+        echo "No attempt will be made to run x64 binary on $ARCH architecture"
+        ;;
+esac

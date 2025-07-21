@@ -27,3 +27,6 @@ RUN chmod +x installSQLtools.sh \
     && bash ./installSQLtools.sh \
     && rm installSQLtools.sh \
     && apt-get clean -y && rm -rf /var/lib/apt/lists/* /tmp/library-scripts
+
+# Set environment variable to indicate we've handled architecture appropriately
+ENV SQL_TOOLS_ARCH_CONFIGURED=true

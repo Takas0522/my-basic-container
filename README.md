@@ -74,6 +74,20 @@ The following ports are automatically forwarded:
 
 ## 🏗️ Development Workflow
 
+### Architecture Support
+This DevContainer supports both **x64** and **ARM64** architectures:
+
+**x64 (Intel/AMD)**
+- Full SQL Server Tools support (SqlPackage, sqlcmd)
+- All Azure development tools
+- Complete feature parity
+
+**ARM64 (Apple Silicon, ARM-based processors)**
+- Native sqlcmd support via go-sqlcmd
+- SqlPackage: placeholder script (ARM64 native version not yet available)
+- All other tools work natively
+- Automatic architecture detection and tool selection
+
 ### Backend Development (.NET)
 ```bash
 cd /workspace/test-projects/SampleWebApi
@@ -135,6 +149,13 @@ This repository includes GitHub Actions workflow that:
 - Some Azure tools may need post-installation
 - Check network connectivity
 - Run setup script manually: `./.devcontainer/setup.sh`
+
+### ARM64 Architecture Issues
+- **SqlPackage**: Not natively supported on ARM64. Consider alternatives:
+  - Azure Data Studio with SQL Database Projects extension
+  - dotnet CLI with SqlPackage NuGet package
+  - Use x64 development environment for database projects
+- **sqlcmd**: Uses go-sqlcmd for ARM64 compatibility
 
 ## 🤝 Contributing
 
