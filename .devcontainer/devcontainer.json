@@ -57,8 +57,9 @@
   },
 
   // Lifecycle scripts
-  "postCreateCommand": "chmod +x .devcontainer/setup.sh && ./.devcontainer/setup.sh",
+  "postCreateCommand": "./.devcontainer/setup.sh",
   "postStartCommand": "./.devcontainer/post-start.sh",
+  "initializeCommand": "docker-compose -f docker-compose.yml up -d --wait || echo 'Docker services initialization attempted'",
 
   // Set environment variables
   "containerEnv": {
@@ -67,10 +68,6 @@
     "SQL_CONNECTION_STRING": "Server=db,1433;Database=TestDb;User Id=sa;Password=P@ssw0rd!;TrustServerCertificate=true"
   },
 
-  // Use 'appPort' to create a container with published ports. If the port isn't working, see:
-  // https://aka.ms/vscode-remote/containers/port-forwarding
-  "appPort": [],
-  
   // Use the non-root user created in the Dockerfile
   "remoteUser": "vscode"
 }

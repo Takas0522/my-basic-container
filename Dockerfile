@@ -12,7 +12,7 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
 RUN curl -k -fsSL https://deb.nodesource.com/setup_lts.x | bash - \
     && apt-get install -y nodejs pkg-config libsecret-1-dev \
     && npm config set strict-ssl false \
-    && npm install -g @angular/cli@18 --force \
+    && npm install -g @angular/cli@latest --force \
     && npm install -g azure-functions-core-tools@4 --unsafe-perm true \
     && npm install -g @azure/static-web-apps-cli \
     && npm config set strict-ssl true
