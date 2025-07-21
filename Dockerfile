@@ -28,5 +28,8 @@ RUN chmod +x installSQLtools.sh \
     && rm installSQLtools.sh \
     && apt-get clean -y && rm -rf /var/lib/apt/lists/* /tmp/library-scripts
 
+# Ensure /usr/local/bin is in PATH (for ARM64 sqlcmd installations)
+ENV PATH="/usr/local/bin:$PATH"
+
 # Set environment variable to indicate we've handled architecture appropriately
 ENV SQL_TOOLS_ARCH_CONFIGURED=true

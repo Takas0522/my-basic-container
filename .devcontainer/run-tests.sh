@@ -124,7 +124,64 @@ case $ARCH in
         run_test "sqlcmd installation and version (unknown arch)" "(sqlcmd -? | head -1) || (/usr/local/bin/sqlcmd -? | head -1) || echo 'sqlcmd not properly installed for this architecture'"
         ;;
 esac
-run_test "sqlcmd command availability" "command_exists sqlcmd || command_exists /usr/local/bin/sqlcmd"
+# より確実なsqlcmd可用性テスト
+run_test "sqlcmd command availability" "
+    # sqlcmdがPATHにあるかチェック
+    if command -v sqlcmd >/dev/null 2>&1; then
+        echo 'sqlcmd found in PATH at:' \$(command -v sqlcmd)
+        exit 0
+    fi
+    
+    # /usr/local/bin/sqlcmdをチェック
+    if [ -x /usr/local/bin/sqlcmd ]; then
+        echo 'sqlcmd found at /usr/local/bin/sqlcmd'
+        # PATHに追加してテスト
+        export PATH=\"/usr/local/bin:\$PATH\"
+        if command -v sqlcmd >/dev/null 2>&1; then
+            echo 'sqlcmd now accessible after adding /usr/local/bin to PATH'
+            exit 0
+        fi
+    fi
+    
+    # /usr/bin/sqlcmdをチェック
+    if [ -x /usr/bin/sqlcmd ]; then
+        echo 'sqlcmd found at /usr/bin/sqlcmd'
+        exit 0
+    fi
+    
+    # どこにも見つからない場合
+    echo 'sqlcmd not found in any expected location'
+    exit 1
+"
+
+# デバッグ用：sqlcmdの詳細な状況を確認
+run_test "sqlcmd debug info" "
+    echo 'Current user:' \$(whoami)
+    echo 'Current directory:' \$(pwd)
+    echo ''
+    echo 'Environment variables:'
+    echo 'PATH=' \$PATH
+    echo 'SQL_TOOLS_ARCH_CONFIGURED=' \$SQL_TOOLS_ARCH_CONFIGURED
+    echo ''
+    echo 'Architecture:' \$(uname -m)
+    echo ''
+    echo 'Checking various locations:'
+    echo 'which sqlcmd:' \$(which sqlcmd 2>/dev/null || echo 'not found')
+    echo 'command -v sqlcmd:' \$(command -v sqlcmd 2>/dev/null || echo 'not found')
+    echo '/usr/local/bin/sqlcmd exists:' \$([ -f /usr/local/bin/sqlcmd ] && echo 'yes' || echo 'no')
+    echo '/usr/local/bin/sqlcmd executable:' \$([ -x /usr/local/bin/sqlcmd ] && echo 'yes' || echo 'no')
+    echo '/usr/bin/sqlcmd exists:' \$([ -f /usr/bin/sqlcmd ] && echo 'yes' || echo 'no')
+    echo '/usr/bin/sqlcmd executable:' \$([ -x /usr/bin/sqlcmd ] && echo 'yes' || echo 'no')
+    echo ''
+    echo 'Contents of /usr/local/bin (SQL related):'
+    ls -la /usr/local/bin/ 2>/dev/null | grep -i sql || echo 'No SQL-related files found'
+    echo ''
+    echo 'Contents of /usr/bin (SQL related):'
+    ls -la /usr/bin/ 2>/dev/null | grep -i sql || echo 'No SQL-related files found in /usr/bin'
+    echo ''
+    echo 'Find sqlcmd anywhere:'
+    find /usr -name sqlcmd -type f 2>/dev/null || echo 'sqlcmd not found with find command'
+"
 
 echo -e "\n🧪 2. TESTING SERVICE CONNECTIVITY"
 echo "================================="
