@@ -4,6 +4,14 @@
   "service": "app",
   "workspaceFolder": "/workspace",
   
+  // Build arguments for multi-architecture support
+  "build": {
+    "args": {
+      "BUILDPLATFORM": "${localEnv:BUILDPLATFORM}",
+      "TARGETPLATFORM": "${localEnv:TARGETPLATFORM}"
+    }
+  },
+  
   // Features to install in the container
   "features": {
     "ghcr.io/devcontainers/features/git:1": {}
@@ -59,7 +67,7 @@
   // Lifecycle scripts
   "postCreateCommand": "./.devcontainer/setup.sh",
   "postStartCommand": "./.devcontainer/post-start.sh",
-  "initializeCommand": "docker-compose -f docker-compose.yml up -d --wait || echo 'Docker services initialization attempted'",
+  "initializeCommand": "docker compose -f docker-compose.yml down && docker compose -f docker-compose.yml up -d --wait || echo 'Docker services initialization attempted'",
 
   // Set environment variables
   "containerEnv": {

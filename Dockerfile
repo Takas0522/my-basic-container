@@ -1,5 +1,15 @@
+# Multi-architecture build support
+ARG BUILDPLATFORM
+ARG TARGETPLATFORM
+
 # [Choice] .NET version: 9.0-bookworm, 9.0-jammy, 9.0-bullseye
 FROM mcr.microsoft.com/devcontainers/dotnet:1-9.0-bookworm
+
+# Display platform information for debugging
+RUN echo "Build platform: ${BUILDPLATFORM:-not-set}" && \
+    echo "Target platform: ${TARGETPLATFORM:-not-set}" && \
+    echo "Container architecture: $(uname -m)" && \
+    echo "============================="
 
 # Add .NET global tools path
 ENV PATH="$PATH:/home/vscode/.dotnet:/home/vscode/.dotnet/tools"
@@ -11,6 +21,8 @@ RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
 # Install Node.js (using NodeSource repository for latest LTS) and core packages
 RUN curl -k -fsSL https://deb.nodesource.com/setup_lts.x | bash - \
     && apt-get install -y nodejs pkg-config libsecret-1-dev \
+    && node --version \
+    && npm --version \
     && npm config set strict-ssl false \
     && npm install -g @angular/cli@latest --force \
     && npm install -g azure-functions-core-tools@4 --unsafe-perm true \
@@ -33,3 +45,12 @@ ENV PATH="/usr/local/bin:$PATH"
 
 # Set environment variable to indicate we've handled architecture appropriately
 ENV SQL_TOOLS_ARCH_CONFIGURED=true
+
+# Display final architecture information
+RUN echo "===== Final Architecture Information =====" && \
+    echo "Container architecture: $(uname -m)" && \
+    echo "TARGETPLATFORM: ${TARGETPLATFORM:-not-set}" && \
+    echo "sqlcmd location: $(which sqlcmd 2>/dev/null || echo 'Not in PATH')" && \
+    echo "sqlcmd in /usr/local/bin: $(ls -la /usr/local/bin/sqlcmd 2>/dev/null || echo 'Not found')" && \
+    echo "PATH: $PATH" && \
+    echo "============================================="
