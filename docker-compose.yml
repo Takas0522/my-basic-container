@@ -3,6 +3,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        BUILDPLATFORM: ${BUILDPLATFORM:-}
+        TARGETPLATFORM: ${TARGETPLATFORM:-}
 
     volumes:
       - .:/workspace:cached
@@ -20,6 +23,7 @@ services:
 
   db:
     image: mcr.microsoft.com/azure-sql-edge
+    platform: ${DB_PLATFORM:-linux/amd64}
     hostname: SQL-Library
     container_name: SQL-Library
     restart: unless-stopped
@@ -37,6 +41,7 @@ services:
 
   azurite:
     image: mcr.microsoft.com/azure-storage/azurite
+    platform: ${AZURITE_PLATFORM:-linux/amd64}
     hostname: azurite
     container_name: azurite
     restart: unless-stopped
