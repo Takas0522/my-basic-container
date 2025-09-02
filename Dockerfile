@@ -11,12 +11,19 @@ RUN echo "Build platform: ${BUILDPLATFORM:-not-set}" && \
     echo "Container architecture: $(uname -m)" && \
     echo "============================="
 
-# Add .NET global tools path
-ENV PATH="$PATH:/home/vscode/.dotnet:/home/vscode/.dotnet/tools"
+# Add .NET global tools path (including root user path for container execution)
+ENV PATH="$PATH:/home/vscode/.dotnet:/home/vscode/.dotnet/tools:/root/.dotnet/tools"
 
 # [Optional] Uncomment this section to install additional OS packages.
 RUN apt-get update && export DEBIAN_FRONTEND=noninteractive \
     && apt-get -y install --no-install-recommends software-properties-common curl unzip libicu72
+
+# Install .NET 8.0 runtime for SqlPackage compatibility
+RUN curl -sSL https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb -o packages-microsoft-prod.deb \
+    && dpkg -i packages-microsoft-prod.deb \
+    && rm packages-microsoft-prod.deb \
+    && apt-get update \
+    && apt-get install -y aspnetcore-runtime-8.0 dotnet-runtime-8.0
 
 # Install Node.js (using NodeSource repository for latest LTS) and core packages
 RUN curl -k -fsSL https://deb.nodesource.com/setup_lts.x | bash - \
@@ -81,5 +88,7 @@ RUN echo "===== Final Architecture Information =====" && \
     echo "TARGETPLATFORM: ${TARGETPLATFORM:-not-set}" && \
     echo "sqlcmd location: $(which sqlcmd 2>/dev/null || echo 'Not in PATH')" && \
     echo "sqlcmd in /usr/local/bin: $(ls -la /usr/local/bin/sqlcmd 2>/dev/null || echo 'Not found')" && \
+    echo "SqlPackage test: $(sqlpackage --version 2>/dev/null | head -1 || echo 'Not working')" && \
+    echo ".NET versions: $(dotnet --list-runtimes | grep -E 'Microsoft.NETCore.App' || echo 'Runtime info unavailable')" && \
     echo "PATH: $PATH" && \
     echo "============================================="
