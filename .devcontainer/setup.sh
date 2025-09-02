@@ -97,10 +97,10 @@ fi
 
 # Test SQL tools
 echo "🧪 Testing SQL tools..."
-if /opt/sqlpackage/sqlpackage /version >/dev/null 2>&1; then
+if sqlpackage /? >/dev/null 2>&1; then
     echo "✅ SqlPackage is working"
 else
-    echo "⚠️  SqlPackage not available (this is expected on ARM64 architecture)"
+    echo "⚠️  SqlPackage not available"
 fi
 
 # Create sample .NET project

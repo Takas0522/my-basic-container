@@ -12,9 +12,11 @@ echo "sqlcmd version test:"
 sqlcmd -? | head -1 2>/dev/null || echo "sqlcmd command failed"
 echo ""
 
-echo "sqlpackage location: /opt/sqlpackage/sqlpackage"
+echo "sqlpackage location: $(which sqlpackage 2>/dev/null || echo 'Not in PATH')"
 echo "sqlpackage version test:"
-/opt/sqlpackage/sqlpackage /version 2>/dev/null || echo "sqlpackage command failed"
+sqlpackage /? 2>/dev/null | head -1 || echo "sqlpackage command failed"
+echo "dotnet tool list:"
+dotnet tool list -g | grep sqlpackage || echo "No sqlpackage found in dotnet tools"
 echo ""
 
 echo "=== Environment Variables ==="

@@ -43,22 +43,14 @@ fi
 echo ""
 
 echo "   sqlpackage availability:"
-if [ -f /opt/sqlpackage/sqlpackage ]; then
-    echo "   ℹ️ sqlpackage found at /opt/sqlpackage/sqlpackage"
-    case $(uname -m) in
-        x86_64|amd64)
-            sqlpackage_version=$(/opt/sqlpackage/sqlpackage /version 2>/dev/null | head -1 | tr -d '\r' || echo "Version check failed")
-            echo "      Version info: $sqlpackage_version"
-            echo "   ✅ Native x64 sqlpackage available"
-            ;;
-        aarch64|arm64)
-            echo "   ⚠️ ARM64 platform detected - sqlpackage is a placeholder script"
-            echo "      Run '/opt/sqlpackage/sqlpackage' to see alternatives"
-            ;;
-        *)
-            echo "   ⚠️ Unsupported architecture - sqlpackage is a placeholder script"
-            ;;
-    esac
+if command -v sqlpackage >/dev/null 2>&1; then
+    echo "   ✅ sqlpackage found in PATH: $(which sqlpackage)"
+    sqlpackage_version=$(sqlpackage /? 2>/dev/null | head -1 | tr -d '\r' || echo "Version check failed")
+    echo "      Version info: $sqlpackage_version"
+elif dotnet tool list -g | grep -q microsoft.sqlpackage; then
+    echo "   ✅ sqlpackage found as dotnet tool"
+    sqlpackage_version=$(dotnet tool list -g | grep microsoft.sqlpackage | awk '{print $2}' || echo "Version unavailable")
+    echo "      Version: $sqlpackage_version"
 else
     echo "   ❌ sqlpackage not found"
 fi

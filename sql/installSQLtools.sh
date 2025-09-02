@@ -98,11 +98,12 @@ else
 fi
 
 echo "sqlpackage version:"
-# Check if sqlpackage is available in PATH (dotnet tool) or in /opt/sqlpackage
+# Check if sqlpackage is available in PATH (dotnet tool)
 if command -v sqlpackage >/dev/null 2>&1; then
-    sqlpackage --version || echo "sqlpackage found in PATH but version check failed"
-elif [ -f /opt/sqlpackage/sqlpackage ]; then
-    /opt/sqlpackage/sqlpackage /version || echo "sqlpackage verification failed"
+    sqlpackage /? | head -1 || echo "sqlpackage found in PATH but version check failed"
+elif dotnet tool list -g | grep -q microsoft.sqlpackage; then
+    echo "SqlPackage installed as dotnet tool but not in PATH"
+    echo "Available via: $(dotnet tool list -g | grep microsoft.sqlpackage)"
 else
     echo "SqlPackage not found in expected locations"
 fi

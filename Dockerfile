@@ -88,7 +88,7 @@ RUN echo "===== Final Architecture Information =====" && \
     echo "TARGETPLATFORM: ${TARGETPLATFORM:-not-set}" && \
     echo "sqlcmd location: $(which sqlcmd 2>/dev/null || echo 'Not in PATH')" && \
     echo "sqlcmd in /usr/local/bin: $(ls -la /usr/local/bin/sqlcmd 2>/dev/null || echo 'Not found')" && \
-    echo "SqlPackage test: $(sqlpackage --version 2>/dev/null | head -1 || echo 'Not working')" && \
+    echo "SqlPackage test: $(sqlpackage /? 2>/dev/null | head -1 || echo 'Not working')" && \
     echo ".NET versions: $(dotnet --list-runtimes | grep -E 'Microsoft.NETCore.App' || echo 'Runtime info unavailable')" && \
     echo "PATH: $PATH" && \
     echo "============================================="
