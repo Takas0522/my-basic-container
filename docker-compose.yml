@@ -14,7 +14,11 @@ services:
     command: sleep infinity
 
     # Runs app on the same network as the database container, allows "forwardPorts" in devcontainer.json function.
-    network_mode: service:db
+    # network_mode: service:db  # Commented out to avoid namespace issues
+    networks:
+      - app-network
+    depends_on:
+      - db
     # Uncomment the next line to use a non-root user for all processes.
     # user: vscode
 
@@ -31,6 +35,8 @@ services:
       ACCEPT_EULA: Y
     env_file:
       - .env
+    networks:
+      - app-network
     deploy:
       resources:
         limits:
@@ -46,6 +52,8 @@ services:
     container_name: azurite
     restart: unless-stopped
     command: "azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0"
+    networks:
+      - app-network
     ports:
       - "10000:10000"  # Blob service
       - "10001:10001"  # Queue service  
@@ -53,6 +61,10 @@ services:
     volumes:
       - azurite-data:/data
     # Add "forwardPorts": ["10000", "10001", "10002"] to **devcontainer.json** to forward Azurite locally.
+
+networks:
+  app-network:
+    driver: bridge
 
 volumes:
   azurite-data:

@@ -36,8 +36,6 @@ RUN ARCH=$(uname -m) && \
     else \
         echo "Azure Functions Core Tools is not natively available for ARM64 architecture."; \
         echo "Attempting to install with x86_64 emulation..."; \
-        # Try to install qemu-user-static for x86_64 emulation
-        apt-get update && apt-get install -y qemu-user-static; \
         # Try npm install with x86_64 emulation (may not work reliably)
         npm install -g azure-functions-core-tools@4 --unsafe-perm true || { \
             echo "Failed to install with emulation. Creating placeholder script..."; \
