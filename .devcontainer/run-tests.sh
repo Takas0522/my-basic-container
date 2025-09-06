@@ -104,26 +104,9 @@ run_test "Azure Functions Core Tools installation (optional)" "func --version ||
 run_test "Azure Static Web Apps CLI installation (optional)" "swa --version || echo 'Azure SWA CLI not installed - can be installed with: npm install -g @azure/static-web-apps-cli'"
 
 # Test SQL tools
-case $ARCH in
-    x86_64|amd64)
-        echo "Testing SQL tools for x64 architecture..."
-        run_test "SqlPackage installation" "/opt/sqlpackage/sqlpackage /version"
-        run_test "sqlcmd installation and version" "sqlcmd -? | head -1"
-        ;;
-    aarch64|arm64)
-        echo "Testing SQL tools for ARM64 architecture..."
-        # For ARM64, we don't even try to run SqlPackage, we just check the placeholder exists
-        run_test "SqlPackage placeholder exists (ARM64)" "[ -f /opt/sqlpackage/sqlpackage ] && echo 'ARM64 placeholder exists' || echo 'SqlPackage placeholder missing'"
-        # ARM64ではsqlcmdが/usr/local/bin/にインストールされることがある
-        run_test "sqlcmd installation and version (ARM64)" "(sqlcmd -? | head -1) || (/usr/local/bin/sqlcmd -? | head -1)"
-        ;;
-    *)
-        echo "Testing SQL tools for unknown architecture ($ARCH)..."
-        # For unknown architectures, we also don't try to run SqlPackage
-        run_test "SqlPackage placeholder exists (unknown arch)" "[ -f /opt/sqlpackage/sqlpackage ] && echo 'Placeholder exists' || echo 'SqlPackage placeholder missing'"
-        run_test "sqlcmd installation and version (unknown arch)" "(sqlcmd -? | head -1) || (/usr/local/bin/sqlcmd -? | head -1) || echo 'sqlcmd not properly installed for this architecture'"
-        ;;
-esac
+echo "Testing SQL tools for $ARCH architecture..."
+run_test "SqlPackage installation (dotnet tool)" "sqlpackage /? | head -1"
+run_test "sqlcmd installation and version" "sqlcmd -? | head -1"
 # より確実なsqlcmd可用性テスト
 run_test "sqlcmd command availability" "
     # sqlcmdがPATHにあるかチェック
