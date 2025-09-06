@@ -73,7 +73,9 @@
   "containerEnv": {
     "ASPNETCORE_ENVIRONMENT": "Development",
     "AZURITE_CONNECTIONSTRING": "DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;QueueEndpoint=http://azurite:10001/devstoreaccount1;TableEndpoint=http://azurite:10002/devstoreaccount1;",
-    "SQL_CONNECTION_STRING": "Server=db,1433;Database=TestDb;User Id=sa;Password=P@ssw0rd!;TrustServerCertificate=true"
+    "SQL_CONNECTION_STRING": "Server=db,1433;Database=TestDb;User Id=sa;Password=P@ssw0rd!;TrustServerCertificate=true",
+    "MSSQL_DISABLE_LOCALDB": "true",
+    "MSSQL_USE_LOCALDB": "false"
   },
 
   // Use the non-root user created in the Dockerfile

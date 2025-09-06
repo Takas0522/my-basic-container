@@ -18,7 +18,8 @@ services:
     networks:
       - app-network
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     # Uncomment the next line to use a non-root user for all processes.
     # user: vscode
 
@@ -28,15 +29,28 @@ services:
   db:
     image: mcr.microsoft.com/azure-sql-edge
     platform: ${DB_PLATFORM:-linux/amd64}
-    hostname: SQL-Library
+    hostname: db
     container_name: SQL-Library
     restart: unless-stopped
     environment:
       ACCEPT_EULA: Y
+      MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:-P@ssw0rd!}
     env_file:
       - .env
+    ports:
+      - "1433:1433"
     networks:
-      - app-network
+      app-network:
+        aliases:
+          - db
+          - sql-server
+          - database
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools/bin/sqlcmd -S localhost -U sa -P ${MSSQL_SA_PASSWORD:-P@ssw0rd!} -Q 'SELECT 1' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
     deploy:
       resources:
         limits:
